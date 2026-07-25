@@ -149,7 +149,7 @@ export function StudentsTable({
             }
           >
             <SelectTrigger size="sm" className="w-32 border-0 shadow-none">
-              <SelectValue asChild>
+              <SelectValue>
                 <StatusBadge status={row.original.internshipStatus} />
               </SelectValue>
             </SelectTrigger>
