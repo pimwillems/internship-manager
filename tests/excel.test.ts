@@ -3,10 +3,14 @@ import * as XLSX from "xlsx";
 
 import {
   collectUnknowns,
+  collectUnknownTeams,
+  parseAssessorRows,
   parseRows,
   parseStatus,
   readWorkbook,
+  suggestAssessorMapping,
   suggestMapping,
+  type AssessorParseContext,
   type ParseContext,
   type RawRow,
 } from "@/lib/excel/import";
@@ -280,5 +284,155 @@ describe("workbook round-trip", () => {
     expect(exportFileName("2026-2027 S1")).toMatch(
       /^students-2026-2027-S1-\d{4}-\d{2}-\d{2}\.xlsx$/
     );
+  });
+});
+
+const emptyAssessorContext: AssessorParseContext = {
+  knownTeams: new Set(),
+  existingAssessorNames: new Set(),
+};
+
+function actx(
+  overrides: Partial<AssessorParseContext> = {}
+): AssessorParseContext {
+  return { ...emptyAssessorContext, ...overrides };
+}
+
+describe("suggestAssessorMapping", () => {
+  it("recognises English and Dutch headers", () => {
+    const mapping = suggestAssessorMapping([
+      "Naam",
+      "E-mail",
+      "Team",
+      "Actief",
+    ]);
+    expect(mapping).toMatchObject({
+      Naam: "name",
+      "E-mail": "email",
+      Team: "team",
+      Actief: "isActive",
+    });
+  });
+
+  it("never maps two columns onto the same field", () => {
+    const mapping = suggestAssessorMapping(["Name", "Naam"]);
+    const fields = Object.values(mapping);
+    expect(new Set(fields).size).toBe(fields.length);
+  });
+
+  it("leaves unknown headers unmapped", () => {
+    expect(suggestAssessorMapping(["Totally unrelated"])).toEqual({});
+  });
+});
+
+describe("parseAssessorRows", () => {
+  const mapping = {
+    Naam: "name",
+    Email: "email",
+    Team: "team",
+    Actief: "isActive",
+  } as const;
+
+  it("parses a clean row with no errors", () => {
+    const parsed = parseAssessorRows(
+      [{ Naam: "Alex de Vries", Email: "alex@example.com", Team: "Team 2", Actief: "ja" }],
+      { ...mapping },
+      actx({ knownTeams: new Set(["team 2"]) })
+    );
+    expect(parsed[0]).toMatchObject({
+      name: "Alex de Vries",
+      email: "alex@example.com",
+      team: "Team 2",
+      isActive: true,
+      errors: [],
+      warnings: [],
+    });
+  });
+
+  it("numbers rows the way the spreadsheet does (header is row 1)", () => {
+    const parsed = parseAssessorRows(
+      [{ Naam: "Alex", Team: "Team 2" }],
+      { ...mapping },
+      actx()
+    );
+    expect(parsed[0].rowNumber).toBe(2);
+  });
+
+  it("flags missing name and missing team as errors", () => {
+    const parsed = parseAssessorRows(
+      [{ Naam: "", Team: "" }],
+      { ...mapping },
+      actx()
+    );
+    expect(parsed[0].errors).toContain("Missing name.");
+    expect(parsed[0].errors).toContain("Missing team.");
+  });
+
+  it("flags duplicates inside the file as an error", () => {
+    const parsed = parseAssessorRows(
+      [
+        { Naam: "Alex de Vries", Team: "Team 2" },
+        { Naam: "alex de vries", Team: "Team 2" },
+      ],
+      { ...mapping },
+      actx({ knownTeams: new Set(["team 2"]) })
+    );
+    expect(parsed[0].errors).toHaveLength(0);
+    expect(parsed[1].errors).toContain(
+      "Duplicate assessor name within this file."
+    );
+  });
+
+  it("warns (not errors) when the assessor already exists — that is an update", () => {
+    const parsed = parseAssessorRows(
+      [{ Naam: "Alex de Vries", Team: "Team 2" }],
+      { ...mapping },
+      actx({
+        knownTeams: new Set(["team 2"]),
+        existingAssessorNames: new Set(["alex de vries"]),
+      })
+    );
+    expect(parsed[0].errors).toHaveLength(0);
+    expect(parsed[0].warnings.join(" ")).toMatch(/already exists/i);
+  });
+
+  it("warns about an unknown team without blocking the import", () => {
+    const parsed = parseAssessorRows(
+      [{ Naam: "Alex de Vries", Team: "New Team" }],
+      { ...mapping },
+      actx()
+    );
+    expect(parsed[0].errors).toHaveLength(0);
+    expect(parsed[0].warnings.join(" ")).toMatch(/Unknown team "New Team"/);
+  });
+
+  it("defaults isActive to true, and recognises the no spellings", () => {
+    const parsed = parseAssessorRows(
+      [
+        { Naam: "A", Team: "T" },
+        { Naam: "B", Team: "T", Actief: "nee" },
+      ],
+      { ...mapping },
+      actx({ knownTeams: new Set(["t"]) })
+    );
+    expect(parsed[0].isActive).toBe(true);
+    expect(parsed[1].isActive).toBe(false);
+  });
+});
+
+describe("collectUnknownTeams", () => {
+  it("collects distinct unknown team names for creation", () => {
+    const parsed = parseAssessorRows(
+      [
+        { Naam: "A", Team: "New Team" },
+        { Naam: "B", Team: "New Team" },
+        { Naam: "C", Team: "Team 2" },
+      ],
+      { Naam: "name", Team: "team" },
+      actx({ knownTeams: new Set(["team 2"]) })
+    );
+    expect(collectUnknownTeams(parsed, actx({ knownTeams: new Set(["team 2"]) }))).toEqual([
+      "New Team",
+    ]);
   });
 });
