@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { eq, ne } from "drizzle-orm";
 import { z } from "zod";
 
-import { semesters, teams, topics } from "@/db/schema";
+import { semesters, students, teams, topics } from "@/db/schema";
 import { db } from "@/lib/db";
 import { requireCoordinator } from "@/lib/guard";
 import { diffChanges, recordAudit } from "@/lib/audit";
@@ -299,6 +299,25 @@ export async function changePassword(input: unknown): Promise<ActionResult> {
   } catch {
     return fail("Could not change password. Is the current password correct?");
   }
+  return { ok: true };
+}
+
+/* ----------------------------- clear all students ---------------------------- */
+
+export async function deleteAllStudents(): Promise<ActionResult> {
+  const user = await requireCoordinator();
+  const count = await db.$count(students);
+  if (count === 0) return fail("There are no students to delete.");
+
+  await db.delete(students);
+  await recordAudit({
+    userId: user.id,
+    entity: "student",
+    entityId: "all",
+    action: "delete",
+    changes: { count },
+  });
+  revalidatePath("/", "layout");
   return { ok: true };
 }
 

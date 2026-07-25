@@ -137,8 +137,7 @@ export const students = pgTable(
       .notNull()
       .references(() => semesters.id, { onDelete: "restrict" }),
     studentNumber: text().notNull(),
-    firstName: text().notNull(),
-    lastName: text().notNull(),
+    name: text().notNull(),
     email: text(),
     topicId: integer().references(() => topics.id, { onDelete: "restrict" }),
     internshipStatus: internshipStatus().notNull().default("none"),

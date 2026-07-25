@@ -429,9 +429,7 @@ export function ImportWizard({
                             </TableCell>
                             <TableCell>{row.studentNumber || "—"}</TableCell>
                             <TableCell>
-                              {[row.firstName, row.lastName]
-                                .filter(Boolean)
-                                .join(" ") || "—"}
+                              {row.name || "—"}
                             </TableCell>
                             <TableCell>{row.topic || "—"}</TableCell>
                             <TableCell>{row.internshipStatus}</TableCell>

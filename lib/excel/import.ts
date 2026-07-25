@@ -5,9 +5,7 @@ import type { InternshipStatus } from "@/db/schema";
 /** Fields an imported column can be mapped onto. */
 export const IMPORT_FIELDS = [
   "studentNumber",
-  "firstName",
-  "lastName",
-  "fullName",
+  "name",
   "email",
   "topic",
   "internshipStatus",
@@ -22,9 +20,7 @@ export type ImportField = (typeof IMPORT_FIELDS)[number];
 
 export const FIELD_LABELS: Record<ImportField, string> = {
   studentNumber: "Student number",
-  firstName: "First name",
-  lastName: "Last name",
-  fullName: "Full name (split automatically)",
+  name: "Name",
   email: "Email",
   topic: "Topic",
   internshipStatus: "Internship status",
@@ -43,14 +39,10 @@ const HEADER_HINTS: Record<string, ImportField> = {
   nummer: "studentNumber",
   number: "studentNumber",
   pcn: "studentNumber",
-  firstname: "firstName",
-  voornaam: "firstName",
-  lastname: "lastName",
-  achternaam: "lastName",
-  name: "fullName",
-  naam: "fullName",
-  fullname: "fullName",
-  student: "fullName",
+  name: "name",
+  naam: "name",
+  fullname: "name",
+  student: "name",
   email: "email",
   mail: "email",
   "e-mail": "email",
@@ -145,27 +137,10 @@ export function parseStatus(value: string): InternshipStatus {
   return "none";
 }
 
-/** Split "Sam Visser" / "Visser, Sam" into first + last name. */
-export function splitName(full: string): { firstName: string; lastName: string } {
-  const value = full.trim().replace(/\s+/g, " ");
-  if (!value) return { firstName: "", lastName: "" };
-  if (value.includes(",")) {
-    const [last, first] = value.split(",", 2);
-    return { firstName: (first ?? "").trim(), lastName: last.trim() };
-  }
-  const parts = value.split(" ");
-  if (parts.length === 1) return { firstName: parts[0], lastName: "" };
-  return {
-    firstName: parts[0],
-    lastName: parts.slice(1).join(" "),
-  };
-}
-
 export type ParsedRow = {
   rowNumber: number;
   studentNumber: string;
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
   topic: string;
   internshipStatus: InternshipStatus;
@@ -207,15 +182,7 @@ export function parseRows(
       return col ? (raw[col] ?? "").trim() : "";
     };
 
-    let firstName = get("firstName");
-    let lastName = get("lastName");
-    const fullName = get("fullName");
-    if (fullName && !firstName && !lastName) {
-      const split = splitName(fullName);
-      firstName = split.firstName;
-      lastName = split.lastName;
-    }
-
+    const name = get("name");
     const studentNumber = get("studentNumber");
     const topic = get("topic");
     const firstAssessor = get("firstAssessor");
@@ -225,7 +192,7 @@ export function parseRows(
     const warnings: string[] = [];
 
     if (!studentNumber) errors.push("Missing student number.");
-    if (!firstName && !lastName) errors.push("Missing name.");
+    if (!name) errors.push("Missing name.");
     if (studentNumber && seenNumbers.has(studentNumber))
       errors.push("Duplicate student number within this file.");
     if (studentNumber && context.existingStudentNumbers.has(studentNumber))
@@ -246,10 +213,9 @@ export function parseRows(
       errors.push("1st and 2nd assessor are the same person.");
 
     return {
-      rowNumber: index + 2, // +1 for the header row, +1 for 1-based rows
+      rowNumber: index + 2,
       studentNumber,
-      firstName,
-      lastName,
+      name,
       email: get("email"),
       topic,
       internshipStatus: parseStatus(get("internshipStatus")),

@@ -168,7 +168,7 @@ function AttentionList({
                     href={`/students/${s.id}`}
                     className="text-sm font-medium hover:underline"
                   >
-                    {s.firstName} {s.lastName}
+                    {s.name}
                   </Link>
                   <p className="text-muted-foreground truncate text-xs">
                     {s.studentNumber}

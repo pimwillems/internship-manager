@@ -28,7 +28,7 @@ let semesterId: number;
 
 const MAPPING: Record<string, ImportField> = {
   Nummer: "studentNumber",
-  Naam: "fullName",
+  Naam: "name",
   Topic: "topic",
   Status: "internshipStatus",
   Bedrijf: "company",
@@ -115,8 +115,7 @@ describe("commitImport", () => {
       .where(eq(students.semesterId, semesterId));
     expect(written).toHaveLength(2);
     expect(written.find((s) => s.studentNumber === `${MARK}1`)).toMatchObject({
-      firstName: "Sam",
-      lastName: "Visser",
+      name: "Sam Visser",
       company: "Acme",
       internshipStatus: "approved",
     });
@@ -126,8 +125,7 @@ describe("commitImport", () => {
     await db.insert(students).values({
       semesterId,
       studentNumber: `${MARK}1`,
-      firstName: "Old",
-      lastName: "Name",
+      name: "Old Name",
       company: "Old Co",
     });
 
@@ -143,7 +141,7 @@ describe("commitImport", () => {
       .from(students)
       .where(eq(students.semesterId, semesterId));
     expect(written).toHaveLength(1);
-    expect(written[0]).toMatchObject({ firstName: "New", company: "New Co" });
+    expect(written[0]).toMatchObject({ name: "New Name", company: "New Co" });
   });
 
   it("skips rows with errors and imports the rest", async () => {

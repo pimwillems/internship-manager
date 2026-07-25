@@ -6,7 +6,6 @@ import {
   parseRows,
   parseStatus,
   readWorkbook,
-  splitName,
   suggestMapping,
   type ParseContext,
   type RawRow,
@@ -41,34 +40,6 @@ describe("parseStatus", () => {
   });
 });
 
-describe("splitName", () => {
-  it("splits 'First Last'", () => {
-    expect(splitName("Sam Visser")).toEqual({
-      firstName: "Sam",
-      lastName: "Visser",
-    });
-  });
-
-  it("handles Dutch tussenvoegsels as part of the surname", () => {
-    expect(splitName("Alex de Vries")).toEqual({
-      firstName: "Alex",
-      lastName: "de Vries",
-    });
-  });
-
-  it("handles 'Last, First'", () => {
-    expect(splitName("Visser, Sam")).toEqual({
-      firstName: "Sam",
-      lastName: "Visser",
-    });
-  });
-
-  it("handles a single token and blanks", () => {
-    expect(splitName("Sam")).toEqual({ firstName: "Sam", lastName: "" });
-    expect(splitName("  ")).toEqual({ firstName: "", lastName: "" });
-  });
-});
-
 describe("suggestMapping", () => {
   it("recognises English and Dutch headers", () => {
     const mapping = suggestMapping([
@@ -80,7 +51,7 @@ describe("suggestMapping", () => {
     ]);
     expect(mapping).toMatchObject({
       Studentnummer: "studentNumber",
-      Naam: "fullName",
+      Naam: "name",
       Bedrijf: "company",
       Opmerkingen: "remarks",
       "1e assessor": "firstAssessor",
@@ -101,7 +72,7 @@ describe("suggestMapping", () => {
 describe("parseRows", () => {
   const mapping = {
     Nummer: "studentNumber",
-    Naam: "fullName",
+    Naam: "name",
     Bedrijf: "company",
     Status: "internshipStatus",
     "1e assessor": "firstAssessor",
@@ -128,8 +99,7 @@ describe("parseRows", () => {
     }));
     expect(parsed[0]).toMatchObject({
       studentNumber: "2100001",
-      firstName: "Sam",
-      lastName: "Visser",
+      name: "Sam Visser",
       company: "Acme",
       internshipStatus: "approved",
       errors: [],
@@ -202,18 +172,16 @@ describe("parseRows", () => {
     );
   });
 
-  it("splits a full-name column but prefers explicit first/last columns", () => {
+  it("reads the name column directly", () => {
     const parsed = parseRows(
-      [{ Nummer: "1", Voornaam: "Sam", Achternaam: "Visser", Naam: "Ignored Me" }],
+      [{ Nummer: "1", Naam: "Sam Visser" }],
       {
         Nummer: "studentNumber",
-        Voornaam: "firstName",
-        Achternaam: "lastName",
-        Naam: "fullName",
+        Naam: "name",
       },
       ctx()
     );
-    expect(parsed[0]).toMatchObject({ firstName: "Sam", lastName: "Visser" });
+    expect(parsed[0]).toMatchObject({ name: "Sam Visser" });
   });
 });
 
@@ -226,7 +194,7 @@ describe("collectUnknowns", () => {
       ],
       {
         Nummer: "studentNumber",
-        Naam: "fullName",
+        Naam: "name",
         Topic: "topic",
         "1e assessor": "firstAssessor",
       },
@@ -243,8 +211,7 @@ describe("workbook round-trip", () => {
     {
       id: 1,
       studentNumber: "2100001",
-      firstName: "Sam",
-      lastName: "Visser",
+      name: "Sam Visser",
       email: "sam@example.com",
       topicId: 1,
       topicName: "FED",
@@ -270,8 +237,7 @@ describe("workbook round-trip", () => {
     });
     expect(json[0]).toMatchObject({
       "Student number": "2100001",
-      "First name": "Sam",
-      "Last name": "Visser",
+      Name: "Sam Visser",
       Topic: "FED",
       Team: "Team 2",
       "Internship status": "Approved",
@@ -297,8 +263,7 @@ describe("workbook round-trip", () => {
     );
     expect(parsed[0]).toMatchObject({
       studentNumber: "2100001",
-      firstName: "Sam",
-      lastName: "Visser",
+      name: "Sam Visser",
       company: "Acme",
       internshipStatus: "approved",
       firstAssessor: "Alex de Vries",

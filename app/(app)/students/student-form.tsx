@@ -28,8 +28,7 @@ type TopicOption = { id: number; name: string; teamId: number; teamName: string 
 
 export type StudentFormValues = {
   studentNumber: string;
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
   topicId: number | null;
   internshipStatus: InternshipStatus;
@@ -137,25 +136,14 @@ export function StudentForm({
                 required
               />
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="grid gap-2">
-                <Label htmlFor="first">First name</Label>
-                <Input
-                  id="first"
-                  value={values.firstName}
-                  onChange={(e) => set("firstName", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="last">Last name</Label>
-                <Input
-                  id="last"
-                  value={values.lastName}
-                  onChange={(e) => set("lastName", e.target.value)}
-                  required
-                />
-              </div>
+            <div className="grid gap-2">
+              <Label htmlFor="name">Full name</Label>
+              <Input
+                id="name"
+                value={values.name}
+                onChange={(e) => set("name", e.target.value)}
+                required
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>

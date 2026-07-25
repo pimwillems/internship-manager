@@ -121,8 +121,7 @@ describe("getAssessorOptions", () => {
     await db.insert(students).values({
       semesterId,
       studentNumber: `${MARK}-1`,
-      firstName: "A",
-      lastName: "B",
+      name: "A B",
       firstAssessorId: a.id,
     });
 
@@ -147,8 +146,7 @@ describe("getStudentsForSemester", () => {
     await db.insert(students).values({
       semesterId,
       studentNumber: `${MARK}-42`,
-      firstName: "Sam",
-      lastName: "Visser",
+      name: "Sam Visser",
       topicId,
       internshipStatus: "approved",
       firstAssessorId: first.id,
@@ -171,8 +169,7 @@ describe("getStudentsForSemester", () => {
     await db.insert(students).values({
       semesterId,
       studentNumber: `${MARK}-none`,
-      firstName: "No",
-      lastName: "Assessor",
+      name: "No Assessor",
     });
     const rows = await getStudentsForSemester(semesterId);
     const row = rows.find((r) => r.studentNumber === `${MARK}-none`)!;
@@ -189,8 +186,7 @@ describe("getStudentsForSemester", () => {
     await db.insert(students).values({
       semesterId: otherSem.id,
       studentNumber: `${MARK}-other`,
-      firstName: "Other",
-      lastName: "Semester",
+      name: "Other Semester",
     });
     const rows = await getStudentsForSemester(semesterId);
     expect(rows.map((r) => r.studentNumber)).not.toContain(`${MARK}-other`);
@@ -218,8 +214,7 @@ describe("database guarantees", () => {
       db.insert(students).values({
         semesterId,
         studentNumber: `${MARK}-same`,
-        firstName: "X",
-        lastName: "Y",
+        name: "X Y",
         firstAssessorId: a.id,
         secondAssessorId: a.id,
       })
@@ -231,8 +226,7 @@ describe("database guarantees", () => {
       db.insert(students).values({
         semesterId,
         studentNumber: `${MARK}-blank`,
-        firstName: "X",
-        lastName: "Y",
+        name: "X Y",
       })
     ).resolves.toBeDefined();
   });
@@ -241,15 +235,13 @@ describe("database guarantees", () => {
     await db.insert(students).values({
       semesterId,
       studentNumber: `${MARK}-dup`,
-      firstName: "X",
-      lastName: "Y",
+      name: "X Y",
     });
     await expect(
       db.insert(students).values({
         semesterId,
         studentNumber: `${MARK}-dup`,
-        firstName: "Z",
-        lastName: "W",
+        name: "Z W",
       })
     ).rejects.toThrow();
 
@@ -261,8 +253,7 @@ describe("database guarantees", () => {
       db.insert(students).values({
         semesterId: otherSem.id,
         studentNumber: `${MARK}-dup`,
-        firstName: "Z",
-        lastName: "W",
+        name: "Z W",
       })
     ).resolves.toBeDefined();
   });
@@ -275,8 +266,7 @@ describe("database guarantees", () => {
     await db.insert(students).values({
       semesterId,
       studentNumber: `${MARK}-held`,
-      firstName: "X",
-      lastName: "Y",
+      name: "X Y",
       firstAssessorId: a.id,
     });
     await expect(

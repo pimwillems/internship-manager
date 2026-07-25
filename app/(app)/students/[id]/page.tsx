@@ -24,8 +24,7 @@ export default async function StudentDetailPage({
 
     const blank: StudentFormValues = {
       studentNumber: "",
-      firstName: "",
-      lastName: "",
+      name: "",
       email: "",
       topicId: null,
       internshipStatus: "none",
@@ -65,8 +64,7 @@ export default async function StudentDetailPage({
 
   const initial: StudentFormValues = {
     studentNumber: student.studentNumber,
-    firstName: student.firstName,
-    lastName: student.lastName,
+    name: student.name,
     email: student.email ?? "",
     topicId: student.topicId,
     internshipStatus: student.internshipStatus,
@@ -80,7 +78,7 @@ export default async function StudentDetailPage({
   return (
     <>
       <PageHeader
-        title={`${student.firstName} ${student.lastName}`}
+        title={student.name}
         description={`${student.studentNumber}${student.topicName ? ` · ${student.topicName} (${student.topicTeamName})` : ""}`}
       />
       <StudentForm

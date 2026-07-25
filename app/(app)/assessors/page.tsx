@@ -36,15 +36,14 @@ export default async function AssessorsPage() {
     ? await db
         .select({
           id: students.id,
-          firstName: students.firstName,
-          lastName: students.lastName,
+          name: students.name,
           studentNumber: students.studentNumber,
           firstAssessorId: students.firstAssessorId,
           secondAssessorId: students.secondAssessorId,
         })
         .from(students)
         .where(eq(students.semesterId, semester.id))
-        .orderBy(asc(students.lastName))
+        .orderBy(asc(students.name))
     : [];
 
   const rows = allAssessors.map((a) => {
@@ -58,10 +57,10 @@ export default async function AssessorsPage() {
       remaining: load?.remaining ?? 0,
       firstStudents: held
         .filter((s) => s.firstAssessorId === a.id)
-        .map((s) => `${s.studentNumber} · ${s.firstName} ${s.lastName}`),
+        .map((s) => `${s.studentNumber} · ${s.name}`),
       secondStudents: held
         .filter((s) => s.secondAssessorId === a.id)
-        .map((s) => `${s.studentNumber} · ${s.firstName} ${s.lastName}`),
+        .map((s) => `${s.studentNumber} · ${s.name}`),
     };
   });
 

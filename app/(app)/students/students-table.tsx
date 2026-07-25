@@ -73,8 +73,7 @@ export function StudentsTable({
       if (search) {
         const haystack = [
           r.studentNumber,
-          r.firstName,
-          r.lastName,
+          r.name,
           r.email,
           r.company,
           r.topicName,
@@ -105,14 +104,14 @@ export function StudentsTable({
       },
       {
         id: "name",
-        accessorFn: (r) => `${r.lastName}, ${r.firstName}`,
+        accessorFn: (r) => r.name,
         header: "Name",
         cell: ({ row }) => (
           <Link
             href={`/students/${row.original.id}`}
             className="hover:underline"
           >
-            {row.original.firstName} {row.original.lastName}
+            {row.original.name}
           </Link>
         ),
       },

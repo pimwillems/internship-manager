@@ -164,7 +164,7 @@ export function PlanningBoard({
                     href={`/students/${s.id}`}
                     className="text-sm font-medium hover:underline"
                   >
-                    {s.firstName} {s.lastName}
+                    {s.name}
                   </Link>
                   <StatusBadge status={s.internshipStatus} />
                 </div>
@@ -181,7 +181,7 @@ export function PlanningBoard({
                   placeholder="Assign 1st assessor"
                   onChange={(id) =>
                     run(() => assignAssessor(s.id, "first", id), {
-                      successMessage: `1st assessor assigned to ${s.firstName} ${s.lastName}.`,
+                      successMessage: `1st assessor assigned to ${s.name}.`,
                     })
                   }
                 />

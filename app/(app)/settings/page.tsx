@@ -8,6 +8,7 @@ import { SemestersPanel } from "./semesters-panel";
 import { TeamsPanel } from "./teams-panel";
 import { TopicsPanel } from "./topics-panel";
 import { AccountPanel } from "./account-panel";
+import { DangerPanel } from "./danger-panel";
 
 export const metadata = { title: "Settings — Internship Coordination" };
 
@@ -60,6 +61,7 @@ export default async function SettingsPage() {
           <TabsTrigger value="teams">Teams</TabsTrigger>
           <TabsTrigger value="topics">Topics</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="danger">Danger</TabsTrigger>
         </TabsList>
 
         <TabsContent value="semesters" className="mt-4">
@@ -82,6 +84,9 @@ export default async function SettingsPage() {
         </TabsContent>
         <TabsContent value="account" className="mt-4">
           <AccountPanel />
+        </TabsContent>
+        <TabsContent value="danger" className="mt-4">
+          <DangerPanel />
         </TabsContent>
       </Tabs>
     </>

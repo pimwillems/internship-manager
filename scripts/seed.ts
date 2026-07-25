@@ -116,8 +116,7 @@ async function main() {
       {
         semesterId: semester.id,
         studentNumber: "2100001",
-        firstName: "Sam",
-        lastName: "Visser",
+        name: "Sam Visser",
         email: "sam.visser@student.example.com",
         topicId: fedTopic?.id,
         internshipStatus: "approved",
@@ -127,8 +126,7 @@ async function main() {
       {
         semesterId: semester.id,
         studentNumber: "2100002",
-        firstName: "Robin",
-        lastName: "Koning",
+        name: "Robin Koning",
         email: "robin.koning@student.example.com",
         topicId: fsdTopic?.id,
         internshipStatus: "pending",

@@ -177,8 +177,7 @@ export async function commitImport(
 
         const values = {
           studentNumber: row.studentNumber,
-          firstName: row.firstName,
-          lastName: row.lastName,
+          name: row.name,
           email: row.email || null,
           topicId,
           internshipStatus: row.internshipStatus,

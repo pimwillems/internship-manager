@@ -83,8 +83,7 @@ async function makeStudent(
     .values({
       semesterId,
       studentNumber: number,
-      firstName: "Test",
-      lastName: number,
+      name: `Test ${number}`,
       firstAssessorId,
       secondAssessorId,
     })

@@ -21,8 +21,7 @@ export async function getStudentsForSemester(semesterId: number) {
     .select({
       id: students.id,
       studentNumber: students.studentNumber,
-      firstName: students.firstName,
-      lastName: students.lastName,
+      name: students.name,
       email: students.email,
       topicId: students.topicId,
       topicName: topics.name,
@@ -43,7 +42,7 @@ export async function getStudentsForSemester(semesterId: number) {
     .leftJoin(firstAssessor, eq(firstAssessor.id, students.firstAssessorId))
     .leftJoin(secondAssessor, eq(secondAssessor.id, students.secondAssessorId))
     .where(eq(students.semesterId, semesterId))
-    .orderBy(asc(students.lastName), asc(students.firstName));
+    .orderBy(asc(students.name));
 }
 
 /** One student with the same shape as the list rows. */
@@ -53,8 +52,7 @@ export async function getStudentById(id: number) {
       id: students.id,
       semesterId: students.semesterId,
       studentNumber: students.studentNumber,
-      firstName: students.firstName,
-      lastName: students.lastName,
+      name: students.name,
       email: students.email,
       topicId: students.topicId,
       topicName: topics.name,

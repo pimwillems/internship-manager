@@ -6,8 +6,7 @@ import { STATUS_LABELS } from "@/lib/status-labels";
 /** Column order of the exported sheet — mirrors the original workbook. */
 const COLUMNS = [
   "Student number",
-  "First name",
-  "Last name",
+  "Name",
   "Email",
   "Topic",
   "Team",
@@ -25,8 +24,7 @@ export function buildStudentsWorkbook(
 ): Uint8Array {
   const data = rows.map((r) => ({
     "Student number": r.studentNumber,
-    "First name": r.firstName,
-    "Last name": r.lastName,
+    Name: r.name,
     Email: r.email ?? "",
     Topic: r.topicName ?? "",
     Team: r.topicTeamName ?? "",

@@ -20,8 +20,7 @@ const optionalId = z
 
 const studentSchema = z.object({
   studentNumber: z.string().trim().min(1, "Student number is required.").max(40),
-  firstName: z.string().trim().min(1, "First name is required.").max(120),
-  lastName: z.string().trim().min(1, "Last name is required.").max(120),
+  name: z.string().trim().min(1, "Name is required.").max(240),
   email: z.string().trim().email("Enter a valid email.").or(z.literal("")),
   topicId: optionalId,
   internshipStatus: z.enum(["none", "pending", "approved", "rejected"]),
@@ -35,8 +34,7 @@ const studentSchema = z.object({
 function normalise(data: z.infer<typeof studentSchema>) {
   return {
     studentNumber: data.studentNumber,
-    firstName: data.firstName,
-    lastName: data.lastName,
+    name: data.name,
     email: data.email || null,
     topicId: data.topicId,
     internshipStatus: data.internshipStatus,
