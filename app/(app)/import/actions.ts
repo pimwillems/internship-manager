@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { requireCoordinator } from "@/lib/guard";
 import { recordAudit } from "@/lib/audit";
 import { CapacityError, assertCanAssignFirst } from "@/lib/capacity";
-import type { ParsedRow } from "@/lib/excel/import";
+import type { ParsedAssessorRow, ParsedRow } from "@/lib/excel/import";
 
 export type ImportResult =
   | {
@@ -224,6 +224,137 @@ export async function commitImport(
     revalidatePath("/");
     revalidatePath("/assessors");
     return { ok: true, created, updated, skipped, capacityWarnings };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return {
+      ok: false,
+      error: `Import failed and nothing was written: ${message}`,
+    };
+  }
+}
+
+export type AssessorImportResult =
+  | { ok: true; created: number; updated: number; skipped: number }
+  | { ok: false; error: string };
+
+/** Reference data the assessor-import preview step needs. */
+export async function getAssessorImportContext() {
+  await requireCoordinator();
+  const [teamRows, assessorRows] = await Promise.all([
+    db.select({ id: teams.id, name: teams.name }).from(teams),
+    db.select({ id: assessors.id, name: assessors.name }).from(assessors),
+  ]);
+  return {
+    teams: teamRows,
+    existingAssessorNames: assessorRows.map((a) => a.name),
+  };
+}
+
+/**
+ * Commit previewed assessor rows in a single transaction: nothing is written
+ * unless everything that should be written can be.
+ *
+ * Matches on name (case-insensitive): an assessor that already exists is
+ * updated in place rather than duplicated, the same convention as the student
+ * import. Assessors aren't semester-scoped, so this has no semesterId — team
+ * is a hard NOT NULL column, so a row whose team can't be resolved (unknown
+ * name, and creation not enabled) is skipped rather than failing the import.
+ */
+export async function commitAssessorImport(
+  rows: ParsedAssessorRow[],
+  options: { createMissingTeams: boolean }
+): Promise<AssessorImportResult> {
+  const user = await requireCoordinator();
+
+  const valid = rows.filter((r) => r.errors.length === 0);
+  let skipped = rows.length - valid.length;
+  if (valid.length === 0) {
+    return { ok: false, error: "No importable rows — every row has an error." };
+  }
+
+  try {
+    const { created, updated } = await db.transaction(async (tx) => {
+      const teamRows = await tx
+        .select({ id: teams.id, name: teams.name })
+        .from(teams);
+      const teamByName = new Map(
+        teamRows.map((t) => [t.name.toLowerCase(), t.id])
+      );
+
+      if (options.createMissingTeams) {
+        const missing = [
+          ...new Set(
+            valid
+              .map((r) => r.team)
+              .filter((t) => t && !teamByName.has(t.toLowerCase()))
+          ),
+        ];
+        for (const name of missing) {
+          const [row] = await tx.insert(teams).values({ name }).returning();
+          teamByName.set(name.toLowerCase(), row.id);
+        }
+      }
+
+      const existing = await tx
+        .select({ id: assessors.id, name: assessors.name })
+        .from(assessors);
+      const existingByName = new Map(
+        existing.map((a) => [a.name.toLowerCase(), a.id])
+      );
+
+      let created = 0;
+      let updated = 0;
+
+      for (const row of valid) {
+        const teamId = teamByName.get(row.team.toLowerCase());
+        if (!teamId) {
+          skipped++;
+          continue;
+        }
+
+        const values = {
+          name: row.name,
+          email: row.email || null,
+          teamId,
+          isActive: row.isActive,
+        };
+
+        const assessorId = existingByName.get(row.name.toLowerCase());
+        if (assessorId) {
+          await tx
+            .update(assessors)
+            .set(values)
+            .where(eq(assessors.id, assessorId));
+          updated++;
+        } else {
+          const [inserted] = await tx
+            .insert(assessors)
+            .values(values)
+            .returning();
+          existingByName.set(row.name.toLowerCase(), inserted.id);
+          created++;
+        }
+      }
+
+      await recordAudit(
+        {
+          userId: user.id,
+          entity: "import",
+          entityId: "assessors",
+          action: "create",
+          changes: { created, updated, skipped },
+        },
+        tx
+      );
+
+      return { created, updated };
+    });
+
+    revalidatePath("/assessors");
+    revalidatePath("/students");
+    revalidatePath("/planning");
+    revalidatePath("/import");
+    return { ok: true, created, updated, skipped };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return {
