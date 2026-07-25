@@ -135,7 +135,7 @@ export function StudentsTable({
                 )
               }
             >
-              <SelectTrigger size="sm" className="w-52 border-0 shadow-none">
+              <SelectTrigger size="sm" className="w-52">
                 <SelectValue>
                   {row.original.topicName ? (
                     <span>
