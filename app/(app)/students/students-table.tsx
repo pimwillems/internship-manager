@@ -38,7 +38,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { assignAssessor, quickUpdateStudent } from "./actions";
+import { assignAssessor, assignTopic, quickUpdateStudent } from "./actions";
 
 type TopicOption = { id: number; name: string; teamId: number; teamName: string };
 
@@ -116,19 +116,50 @@ export function StudentsTable({
         ),
       },
       {
-        accessorKey: "topicName",
+        id: "topic",
         header: "Topic",
-        cell: ({ row }) =>
-          row.original.topicName ? (
-            <span>
-              {row.original.topicName}
-              <span className="text-muted-foreground ml-1 text-xs">
-                {row.original.topicTeamName}
-              </span>
-            </span>
-          ) : (
-            <span className="text-muted-foreground">—</span>
-          ),
+        cell: ({ row }) => {
+          const NONE = "__none__";
+          return (
+            <Select
+              value={row.original.topicId ? String(row.original.topicId) : NONE}
+              disabled={pending}
+              onValueChange={(v) =>
+                run(
+                  () =>
+                    assignTopic(
+                      row.original.id,
+                      v === NONE ? null : Number(v)
+                    ),
+                  { successMessage: "Topic updated." }
+                )
+              }
+            >
+              <SelectTrigger size="sm" className="w-52 border-0 shadow-none">
+                <SelectValue>
+                  {row.original.topicName ? (
+                    <span>
+                      {row.original.topicName}
+                      <span className="text-muted-foreground ml-1 text-xs">
+                        {row.original.topicTeamName}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">No topic</span>
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>No topic</SelectItem>
+                {topics.map((t) => (
+                  <SelectItem key={t.id} value={String(t.id)}>
+                    {t.name} — {t.teamName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          );
+        },
       },
       {
         accessorKey: "internshipStatus",

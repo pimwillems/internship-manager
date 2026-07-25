@@ -268,6 +268,7 @@ describe("workbook round-trip", () => {
       internshipStatus: "approved",
       firstAssessor: "Alex de Vries",
       secondAssessor: "Bo Jansen",
+      assignmentDescription: "Build a component library.",
       errors: [],
     });
   });

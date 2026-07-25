@@ -263,6 +263,37 @@ export async function quickUpdateStudent(
   return { ok: true };
 }
 
+export async function assignTopic(
+  studentId: number,
+  topicId: number | null
+): Promise<ActionResult> {
+  const user = await requireCoordinator();
+
+  const before = await db.query.students.findFirst({
+    where: eq(students.id, studentId),
+  });
+  if (!before) return { ok: false, error: "Student not found." };
+
+  const patch = { topicId };
+
+  await db
+    .update(students)
+    .set({ ...patch, updatedAt: new Date() })
+    .where(eq(students.id, studentId));
+
+  await recordAudit({
+    userId: user.id,
+    entity: "student",
+    entityId: studentId,
+    action: "update",
+    changes: diffChanges(before, patch),
+  });
+
+  revalidatePath("/students");
+  revalidatePath("/");
+  return { ok: true };
+}
+
 export async function deleteStudent(id: number): Promise<ActionResult> {
   const user = await requireCoordinator();
   await db.delete(students).where(eq(students.id, id));
