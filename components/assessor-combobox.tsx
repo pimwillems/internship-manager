@@ -176,6 +176,7 @@ export function AssessorCombobox({
             variant="ghost"
             size="icon"
             title="Clear"
+            aria-label="Clear selection"
             onClick={() => onChange(null)}
           >
             <X />

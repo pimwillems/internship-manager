@@ -248,6 +248,8 @@ export function AssessorsTable({
                         variant="ghost"
                         onClick={() => setExpanded(isOpen ? null : a.id)}
                         title="Show students"
+                        aria-label={`${isOpen ? "Hide" : "Show"} students assigned to ${a.name}`}
+                        aria-expanded={isOpen}
                       >
                         {isOpen ? <ChevronDown /> : <ChevronRight />}
                       </Button>
@@ -294,6 +296,7 @@ export function AssessorsTable({
                         <div className="flex items-center gap-2">
                           <Progress
                             value={pct}
+                            aria-label={`${a.name} 1st-assessor load`}
                             className="w-24"
                             indicatorClassName={
                               over
@@ -346,6 +349,7 @@ export function AssessorsTable({
                           size="sm"
                           variant="ghost"
                           title="Edit"
+                          aria-label={`Edit ${a.name}`}
                           disabled={pending}
                           onClick={() => openEdit(a)}
                         >
@@ -355,6 +359,7 @@ export function AssessorsTable({
                           size="sm"
                           variant="ghost"
                           title="Delete"
+                          aria-label={`Delete ${a.name}`}
                           disabled={pending}
                           onClick={() =>
                             run(() => deleteAssessor(a.id), {

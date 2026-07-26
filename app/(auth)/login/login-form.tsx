@@ -57,7 +57,11 @@ export function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          {error && <p className="text-destructive text-sm">{error}</p>}
+          {error && (
+            <p role="alert" className="text-destructive text-sm">
+              {error}
+            </p>
+          )}
           <Button type="submit" disabled={loading}>
             {loading && <Loader2 className="animate-spin" />}
             Sign in

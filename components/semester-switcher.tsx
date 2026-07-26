@@ -32,7 +32,7 @@ export function SemesterSwitcher({
 
   return (
     <div className="flex items-center gap-2">
-      <CalendarDays className="text-muted-foreground size-4" />
+      <CalendarDays className="text-muted-foreground size-4" aria-hidden="true" />
       <Select
         value={activeId ? String(activeId) : undefined}
         onValueChange={(value) => {
@@ -43,7 +43,7 @@ export function SemesterSwitcher({
         }}
         disabled={pending}
       >
-        <SelectTrigger size="sm" className="min-w-44">
+        <SelectTrigger size="sm" className="min-w-44" aria-label="Semester">
           <SelectValue placeholder="Select semester" />
         </SelectTrigger>
         <SelectContent>

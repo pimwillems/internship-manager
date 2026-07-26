@@ -116,7 +116,10 @@ export function StudentForm({
       </div>
 
       {error && (
-        <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
+        <div
+          role="alert"
+          className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm"
+        >
           {error}
         </div>
       )}
@@ -272,6 +275,7 @@ export function StudentForm({
           </CardHeader>
           <CardContent>
             <Textarea
+              aria-label="Remarks"
               rows={6}
               value={values.remarks}
               onChange={(e) => set("remarks", e.target.value)}

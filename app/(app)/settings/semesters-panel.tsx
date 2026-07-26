@@ -187,6 +187,7 @@ export function SemestersPanel({
                         size="sm"
                         variant="ghost"
                         title="Set as active semester"
+                        aria-label={`Set ${s.name} as active semester`}
                         disabled={pending}
                         onClick={() =>
                           run(() => setActiveSemester(s.id), {
@@ -201,6 +202,7 @@ export function SemestersPanel({
                       size="sm"
                       variant="ghost"
                       title="Edit"
+                      aria-label={`Edit ${s.name}`}
                       disabled={pending}
                       onClick={() => openEdit(s)}
                     >
@@ -210,6 +212,7 @@ export function SemestersPanel({
                       size="sm"
                       variant="ghost"
                       title="Delete"
+                      aria-label={`Delete ${s.name}`}
                       disabled={pending || (studentCounts[s.id] ?? 0) > 0}
                       onClick={() =>
                         run(() => deleteSemester(s.id), {

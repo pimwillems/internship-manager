@@ -165,6 +165,7 @@ export function TopicsPanel({
                       size="sm"
                       variant="ghost"
                       title="Edit"
+                      aria-label={`Edit ${t.name}`}
                       disabled={pending}
                       onClick={() => openEdit(t)}
                     >
@@ -178,6 +179,7 @@ export function TopicsPanel({
                           ? "Students still use this topic"
                           : "Delete"
                       }
+                      aria-label={`Delete ${t.name}`}
                       disabled={pending || t.studentCount > 0}
                       onClick={() =>
                         run(() => deleteTopic(t.id), {
