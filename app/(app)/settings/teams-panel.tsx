@@ -122,6 +122,7 @@ export function TeamsPanel({ teams }: { teams: TeamRow[] }) {
                       size="sm"
                       variant="ghost"
                       title="Edit"
+                      aria-label={`Edit ${t.name}`}
                       disabled={pending}
                       onClick={() => openEdit(t)}
                     >
@@ -135,6 +136,7 @@ export function TeamsPanel({ teams }: { teams: TeamRow[] }) {
                           ? "Reassign its topics and assessors first"
                           : "Delete"
                       }
+                      aria-label={`Delete ${t.name}`}
                       disabled={
                         pending || t.topicCount > 0 || t.assessorCount > 0
                       }

@@ -270,7 +270,10 @@ export function StudentsTable({
         header: "",
         cell: ({ row }) => (
           <Button asChild size="sm" variant="ghost" title="Open student">
-            <Link href={`/students/${row.original.id}`}>
+            <Link
+              href={`/students/${row.original.id}`}
+              aria-label={`Open ${row.original.name}`}
+            >
               <ExternalLink />
             </Link>
           </Button>
@@ -295,6 +298,7 @@ export function StudentsTable({
       <CardContent className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
           <Input
+            aria-label="Search students"
             placeholder="Search name, number, company…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}

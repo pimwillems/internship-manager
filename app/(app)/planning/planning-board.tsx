@@ -115,6 +115,7 @@ export function PlanningBoard({
                         <div className="flex items-center gap-2">
                           <Progress
                             value={pct}
+                            aria-label={`${a.name} 1st-assessor load`}
                             className="w-24"
                             indicatorClassName={
                               a.isFull ? "bg-warning" : undefined

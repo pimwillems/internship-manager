@@ -172,7 +172,10 @@ export function AssessorImportWizard({ context }: { context: Context }) {
   return (
     <div className="flex flex-col gap-4">
       {done && (
-        <div className="bg-muted rounded-md border px-3 py-2 text-sm whitespace-pre-wrap">
+        <div
+          role="status"
+          className="bg-muted rounded-md border px-3 py-2 text-sm whitespace-pre-wrap"
+        >
           {done}
         </div>
       )}
