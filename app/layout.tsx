@@ -13,7 +13,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+      <head>
+        <script
+          // Applies the saved high-contrast preference before paint so
+          // toggling it doesn't cause a flash of the wrong theme.
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem("a11y-high-contrast")==="1"){document.documentElement.classList.add("a11y-high-contrast")}}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="min-h-full">
         <a
           href="#main-content"

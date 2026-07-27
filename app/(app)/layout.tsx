@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { getSession } from "@/lib/session";
 import { getActiveSemester, getSemesters } from "@/lib/semester";
+import { AccessibilityToggle } from "@/components/accessibility-toggle";
 import { AppSidebar } from "@/components/app-sidebar";
 import { MobileNav } from "@/components/mobile-nav";
 import { SemesterSwitcher } from "@/components/semester-switcher";
@@ -30,7 +31,8 @@ export default async function AppLayout({
             semesters={semesters}
             activeId={active?.id ?? null}
           />
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <AccessibilityToggle />
             <UserMenu email={session.user.email} />
           </div>
         </header>
