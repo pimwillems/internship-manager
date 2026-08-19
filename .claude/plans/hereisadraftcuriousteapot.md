@@ -1,39 +1,21 @@
 # Internship Coordination App — Implementation Plan
 
-## STATUS: implementation complete — remaining work is publishing
+## STATUS (updated 2026-08-19): built, pushed, and merged to `master`
 
-All 8 build steps are implemented and committed on branch
-`feat/intern-management-app` (7 commits on top of `Initial commit`):
-foundation/schema/seed, auth+shell, reference data, students, capacity+planning,
-dashboard, Excel import/export, deploy artifacts + README runbook + tests.
+All 8 build steps below were implemented and have since landed on `master`
+through 4 merged PRs: initial implementation, a students-table topic dropdown
+styling pass, Excel import for assessors, a security-hardening pass ahead of
+the Coolify deploy, and a WCAG 2.2 AA / EN 301 549 accessibility pass. The
+original "nothing pushed yet, push main/feature branch, open PR" section that
+used to live here is done and has been removed — see `git log --oneline` for
+the real history. Coolify deployment itself is still **coordinator-run, not
+agent-run** — see `CLAUDE.md`'s Deployment section for the current line on
+that.
 
-**Nothing has been pushed yet.** What remains:
-
-1. **Point `origin` at the SSH URL** the user specified:
-   `git remote set-url origin git@github.com:pimwillems/internship-manager.git`
-   (`origin` currently points at the HTTPS form of the same repo.)
-2. **Push `main` first.** `git ls-remote origin` returns **zero branches** — the
-   GitHub repo is empty, so there is no base branch for a PR to target. Push
-   local `main` with `git push -u origin main` so it becomes the default branch.
-3. **Push the feature branch:** `git push -u origin feat/intern-management-app`.
-4. **Open the PR** `feat/intern-management-app` → `main`. `gh` is **not
-   installed** in this container, so use the GitHub REST API:
-   `POST /repos/pimwillems/internship-manager/pulls` via `curl` with a token.
-   Title: "Internship coordination app". Body: what the app does, the capacity
-   rule, the three reference-data workflows, and that Coolify deployment is
-   documented-not-performed.
-
-**Known risks to handle when executing, not to block on:**
-- *SSH auth:* pushing over `git@github.com:` needs an SSH key this container may
-  not have, and the agent proxy may rewrite git SSH. If SSH fails, fall back to
-  the HTTPS remote (same repo) and report which was used.
-- *PR credentials:* if no GitHub token is available, push the branches (the
-  valuable, recoverable part) and report that the PR must be opened from the
-  GitHub UI, giving the compare URL
-  `https://github.com/pimwillems/internship-manager/compare/main...feat/intern-management-app`.
-- Retry pushes up to 4 times with exponential backoff on network errors only.
-
-Everything below is the original plan, kept as the record of what was built.
+Everything below is the original build plan, kept as the record of what was
+built and why — useful background for anything touching the data model,
+capacity rule, or reference-data workflows. For day-to-day guidance, `CLAUDE.md`
+at the repo root is the up-to-date source; this file is historical context.
 
 ---
 
