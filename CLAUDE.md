@@ -14,16 +14,15 @@ Local project dir: `~/git/work/intern-management`. GitHub: `pimwillems/internshi
 
 ## Current state (read this first)
 
-- Fully implemented across 7 commits on branch `feat/intern-management-app`, built on
-  top of an `Initial commit`.
-- **Not yet merged.** The remote's `master` branch exists but contains only the initial
-  empty commit — the application code has not been pushed or opened as a PR yet.
-- Local dev was verified against a **native Postgres 16** process (the sandboxed build
-  environment couldn't pull `postgres:17` from Docker Hub), not the `docker-compose.yml`
-  path. Re-verify against real Docker before trusting this fully.
-- Automated tests exist (`tests/*.test.ts`, Playwright config) but were not run to
-  completion end-to-end in the sandboxed environment — rerun `npm test` and the manual
-  capacity check below before relying on this.
+- Fully built and merged into `master` through several PRs: core app, assessor Excel
+  import, security hardening ahead of Coolify deploy, a WCAG 2.2 AA accessibility pass,
+  a public printable assignment list, and Team-column-aware student import (both of the
+  latter two described below). `master` is the real, deployed-from branch — there is no
+  outstanding feature branch.
+- Local dev runs against Postgres via `docker-compose.yml` (`postgres:17` + adminer).
+- Automated tests (`tests/*.test.ts`, Playwright config) run with `npm test` against a
+  live Postgres — currently 66 passing. Playwright e2e (`npm run test:e2e`) exists but
+  re-verify it before relying on it; it isn't run as part of routine changes.
 
 ## Stack (versions verified against npm, keep pinned unless there's a reason to bump)
 
@@ -79,7 +78,21 @@ incidental — they're why the schema looks the way it does:
 3. **Students pick a topic; the topic's team drives (not gates) assessor suggestions.**
    On the student form, picking a topic surfaces that topic's owning-team assessors at
    the top of the combobox as a **soft preference** — assigning an off-team assessor is
-   allowed and just shows a warning, never blocked. Only the capacity rule blocks.
+   allowed and just shows a compact `Alert` warning (`components/ui/alert.tsx`), never
+   blocked. Only the capacity rule blocks. That warning box is deliberately
+   `whitespace-normal` and width-constrained to its own combobox — `TableCell` sets
+   `whitespace-nowrap` (`components/ui/table.tsx`), which is inherited by default, so a
+   plain `<p>` there silently overflows into the next table column instead of wrapping.
+   Keep that in mind for any other long text placed inside a table cell.
+
+The coordinator's student-import workbook also has a **Team** column (the 1st/2nd
+assessor's team, not the topic's). It's mappable via `IMPORT_FIELDS` in
+`lib/excel/import.ts` and follows the same soft-preference philosophy: it's cross-checked
+against each named assessor's actual (fixed) team and produces a non-blocking warning on
+mismatch, and — when the row's assessor doesn't exist yet and gets created — it decides
+that new assessor's team (falling back to the wizard's "attach to team" default only when
+the column is blank or names an unrecognised team). See `commitImport` in
+`app/(app)/import/actions.ts`.
 
 Real catalog seeded in `scripts/seed.ts` (edit in `/settings` afterward, not by
 re-running the seed):
@@ -90,6 +103,20 @@ Team 2  →  FED, FSD
 Team 3  →  Cyber Security Essentials, Network & Cloud Automation, Intelligent Devices
 Team 4  →  Game Design, Open Learning, Mobile Apps Development
 ```
+
+## Public assignment list
+
+`/students/print` (linked from a card on `/import`) is a print-styled page for sharing
+**approved** assignments outside the coordinator's login — on a noticeboard, as a PDF,
+etc. It is deliberately narrow: student name, topic, and both assessors only — no email,
+company, or remarks. It still lives inside the protected `(app)` route group and requires
+the coordinator's session like every other page; there is no unauthenticated public URL.
+The coordinator opens it and uses the browser's own "Print → Save as PDF" (`PrintButton`
+just calls `window.print()`); nothing server-generates a PDF file. The app chrome
+(`AppSidebar`, the top header, `main`'s padding) hides under a `print:hidden` /
+`print:p-0` media-query variant in `app/(app)/layout.tsx` and `components/app-sidebar.tsx`
+so only the table prints. If you add another page meant to be printed, follow the same
+pattern rather than building a second print stylesheet approach.
 
 ## Data model (`db/schema.ts`)
 
@@ -148,13 +175,15 @@ lib/audit.ts            wraps mutating actions, writes audit_log
 lib/excel/import.ts, export.ts
 
 app/(auth)/login/
-app/(app)/layout.tsx    protected shell: sidebar + semester switcher
+app/(app)/layout.tsx    protected shell: sidebar + semester switcher (also print:hidden chrome)
 app/(app)/page.tsx      dashboard
 app/(app)/students/, assessors/, planning/, settings/, import/
+app/(app)/students/print/   printable public assignment list, see above
 app/api/auth/[...all]/, app/api/health/, app/api/export/
 middleware.ts
 
-components/ui/          hand-authored shadcn primitives (see Stack note above)
+components/ui/          hand-authored shadcn primitives (see Stack note above),
+                         including alert.tsx (Alert/AlertDescription, + a "warning" variant)
 components/assessor-combobox.tsx   capacity-aware picker, reused in student form + planning
 components/semester-switcher.tsx, app-sidebar.tsx, page-header.tsx, user-menu.tsx
 
@@ -193,3 +222,8 @@ wants that done by an agent, or just wants the runbook followed by them.
 - No hand-rolled `users`/password table — Better Auth owns that schema.
 - Don't assume `ui.shadcn.com` is unreachable forever; it was a proxy-specific block
   in one sandboxed session, re-check before hand-writing new primitives elsewhere.
+- No public/unauthenticated route for the printable assignment list — it stays behind
+  the coordinator's login; sharing the PDF/image after export is the coordinator's job.
+- Don't drop long-text warnings (or anything else) into a `TableCell` as a bare `<p>`/
+  `<span>` — it inherits `whitespace-nowrap` and overflows into the next column instead
+  of wrapping. Use `Alert`/`AlertDescription` or an explicit `whitespace-normal`.
