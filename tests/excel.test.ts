@@ -20,6 +20,8 @@ import type { StudentRow } from "@/lib/students";
 const emptyContext: ParseContext = {
   knownTopics: new Set(),
   knownAssessors: new Set(),
+  knownTeams: new Set(),
+  assessorTeams: new Map(),
   existingStudentNumbers: new Set(),
 };
 
@@ -156,6 +158,58 @@ describe("parseRows", () => {
     expect(parsed[0].errors).toHaveLength(0);
     expect(parsed[0].warnings.join(" ")).toMatch(/Unknown topic "FED"/);
     expect(parsed[0].warnings.join(" ")).toMatch(/Unknown 1st assessor/);
+  });
+
+  it("warns when the sheet's Team column doesn't match the 1st assessor's actual team", () => {
+    const parsed = parseRows(
+      [
+        {
+          Nummer: "1",
+          Naam: "A B",
+          "1e assessor": "Alex de Vries",
+          Team: "Team 2",
+        },
+      ],
+      { ...mapping, Team: "team" },
+      ctx({
+        knownAssessors: new Set(["alex de vries"]),
+        knownTeams: new Set(["team 1", "team 2"]),
+        assessorTeams: new Map([["alex de vries", "Team 1"]]),
+      })
+    );
+    expect(parsed[0].errors).toHaveLength(0);
+    expect(parsed[0].warnings.join(" ")).toMatch(
+      /1st assessor "Alex de Vries" belongs to team "Team 1", not "Team 2"/
+    );
+  });
+
+  it("does not warn when the Team column matches the assessor's actual team", () => {
+    const parsed = parseRows(
+      [
+        {
+          Nummer: "1",
+          Naam: "A B",
+          "1e assessor": "Alex de Vries",
+          Team: "Team 1",
+        },
+      ],
+      { ...mapping, Team: "team" },
+      ctx({
+        knownAssessors: new Set(["alex de vries"]),
+        knownTeams: new Set(["team 1"]),
+        assessorTeams: new Map([["alex de vries", "Team 1"]]),
+      })
+    );
+    expect(parsed[0].warnings).toHaveLength(0);
+  });
+
+  it("warns about an unknown team name", () => {
+    const parsed = parseRows(
+      [{ Nummer: "1", Naam: "A B", Team: "Ghost Team" }],
+      { ...mapping, Team: "team" },
+      ctx()
+    );
+    expect(parsed[0].warnings.join(" ")).toMatch(/Unknown team "Ghost Team"/);
   });
 
   it("errors when both assessors are the same person", () => {

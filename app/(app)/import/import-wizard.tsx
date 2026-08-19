@@ -46,7 +46,7 @@ const MAPPING_STORAGE_KEY = "intern-import-mapping";
 
 type Context = {
   topics: { id: number; name: string }[];
-  assessors: { id: number; name: string }[];
+  assessors: { id: number; name: string; teamId: number }[];
   existingStudentNumbers: string[];
   teams: { id: number; name: string }[];
 };
@@ -73,16 +73,22 @@ export function ImportWizard({
   );
   const [done, setDone] = useState<string | null>(null);
 
-  const parseContext: ParseContext = useMemo(
-    () => ({
+  const parseContext: ParseContext = useMemo(() => {
+    const teamNameById = new Map(context.teams.map((t) => [t.id, t.name]));
+    return {
       knownTopics: new Set(context.topics.map((t) => t.name.toLowerCase())),
       knownAssessors: new Set(
         context.assessors.map((a) => a.name.toLowerCase())
       ),
+      knownTeams: new Set(context.teams.map((t) => t.name.toLowerCase())),
+      assessorTeams: new Map(
+        context.assessors
+          .map((a) => [a.name.toLowerCase(), teamNameById.get(a.teamId)])
+          .filter((entry): entry is [string, string] => Boolean(entry[1]))
+      ),
       existingStudentNumbers: new Set(context.existingStudentNumbers),
-    }),
-    [context]
-  );
+    };
+  }, [context]);
 
   const sheet = sheets?.find((s) => s.name === sheetName) ?? null;
 
@@ -352,9 +358,11 @@ export function ImportWizard({
                     </SelectContent>
                   </Select>
                   <span className="text-muted-foreground text-xs">
-                    You can correct teams afterwards in Settings and on the
-                    Assessors page. New assessors start with no capacity, so
-                    set their maximum before assigning them.
+                    Used when the file has no Team column, or the column&apos;s
+                    value doesn&apos;t match a known team. You can correct teams
+                    afterwards in Settings and on the Assessors page. New
+                    assessors start with no capacity, so set their maximum
+                    before assigning them.
                   </span>
                 </div>
               )}
@@ -390,6 +398,7 @@ export function ImportWizard({
                       <TableHead>Company</TableHead>
                       <TableHead>1st</TableHead>
                       <TableHead>2nd</TableHead>
+                      <TableHead>Team</TableHead>
                       <TableHead>Issues</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -411,6 +420,7 @@ export function ImportWizard({
                         <TableCell>{row.company || "—"}</TableCell>
                         <TableCell>{row.firstAssessor || "—"}</TableCell>
                         <TableCell>{row.secondAssessor || "—"}</TableCell>
+                        <TableCell>{row.team || "—"}</TableCell>
                         <TableCell className="max-w-72 whitespace-normal">
                           {row.errors.map((e) => (
                             <span

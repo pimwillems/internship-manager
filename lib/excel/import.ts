@@ -14,6 +14,7 @@ export const IMPORT_FIELDS = [
   "remarks",
   "firstAssessor",
   "secondAssessor",
+  "team",
 ] as const;
 
 export type ImportField = (typeof IMPORT_FIELDS)[number];
@@ -29,6 +30,7 @@ export const FIELD_LABELS: Record<ImportField, string> = {
   remarks: "Remarks",
   firstAssessor: "1st assessor",
   secondAssessor: "2nd assessor",
+  team: "Team",
 };
 
 /** Column header → field, for the remembered default mapping. */
@@ -74,6 +76,9 @@ const HEADER_HINTS: Record<string, ImportField> = {
   "2ndassessor": "secondAssessor",
   secondassessor: "secondAssessor",
   assessor2: "secondAssessor",
+  team: "team",
+  teamnaam: "team",
+  teamname: "team",
 };
 
 function normaliseHeader(header: string): string {
@@ -156,6 +161,7 @@ export type ParsedRow = {
   remarks: string;
   firstAssessor: string;
   secondAssessor: string;
+  team: string;
   errors: string[];
   warnings: string[];
 };
@@ -165,6 +171,10 @@ export type ParseContext = {
   knownTopics: Set<string>;
   /** Known assessor names (lower-cased). */
   knownAssessors: Set<string>;
+  /** Known team names (lower-cased). */
+  knownTeams: Set<string>;
+  /** Assessor name (lower-cased) → their fixed team name, for mismatch warnings. */
+  assessorTeams: Map<string, string>;
   /** Student numbers already in this semester. */
   existingStudentNumbers: Set<string>;
 };
@@ -194,6 +204,7 @@ export function parseRows(
     const topic = get("topic");
     const firstAssessor = get("firstAssessor");
     const secondAssessor = get("secondAssessor");
+    const team = get("team");
 
     const errors: string[] = [];
     const warnings: string[] = [];
@@ -219,6 +230,20 @@ export function parseRows(
     )
       errors.push("1st and 2nd assessor are the same person.");
 
+    if (team && !context.knownTeams.has(team.toLowerCase()))
+      warnings.push(`Unknown team "${team}".`);
+    for (const [role, assessorName] of [
+      ["1st", firstAssessor],
+      ["2nd", secondAssessor],
+    ] as const) {
+      if (!team || !assessorName) continue;
+      const actualTeam = context.assessorTeams.get(assessorName.toLowerCase());
+      if (actualTeam && actualTeam.toLowerCase() !== team.toLowerCase())
+        warnings.push(
+          `${role} assessor "${assessorName}" belongs to team "${actualTeam}", not "${team}".`
+        );
+    }
+
     return {
       rowNumber: index + 2,
       studentNumber,
@@ -231,6 +256,7 @@ export function parseRows(
       remarks: get("remarks"),
       firstAssessor,
       secondAssessor,
+      team,
       errors,
       warnings,
     };

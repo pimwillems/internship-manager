@@ -34,6 +34,7 @@ const MAPPING: Record<string, ImportField> = {
   Bedrijf: "company",
   "1e assessor": "firstAssessor",
   "2e assessor": "secondAssessor",
+  Team: "team",
 };
 
 async function cleanup() {
@@ -72,6 +73,8 @@ function parse(rows: RawRow[], known: { topics?: string[]; assessors?: string[];
   return parseRows(rows, MAPPING, {
     knownTopics: new Set((known.topics ?? []).map((t) => t.toLowerCase())),
     knownAssessors: new Set((known.assessors ?? []).map((a) => a.toLowerCase())),
+    knownTeams: new Set(),
+    assessorTeams: new Map(),
     existingStudentNumbers: new Set(known.existing ?? []),
   });
 }
@@ -271,6 +274,37 @@ describe("commitImport", () => {
       .where(eq(students.semesterId, semesterId));
     expect(written.firstAssessorId).toBe(a.id);
     expect(written.secondAssessorId).toBeNull();
+  });
+
+  it("creates a missing assessor on the team named in the sheet's Team column, not the default", async () => {
+    const [otherTeam] = await db
+      .insert(teams)
+      .values({ name: `${MARK} Team 2` })
+      .returning();
+
+    const rows = parse(
+      [
+        {
+          Nummer: `${MARK}1`,
+          Naam: "Sam Visser",
+          "1e assessor": "New Assessor",
+          Team: `${MARK} Team 2`,
+        },
+      ],
+      {}
+    );
+
+    await commitImport(semesterId, rows, {
+      createMissingTopics: false,
+      createMissingAssessors: true,
+      defaultTeamId: teamId,
+    });
+
+    const assessor = await db.query.assessors.findFirst({
+      where: eq(assessors.name, "New Assessor"),
+    });
+    // The row's Team column wins over the "attach to team" default.
+    expect(assessor?.teamId).toBe(otherTeam.id);
   });
 
   it("imports into the given semester only", async () => {

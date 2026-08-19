@@ -25,7 +25,13 @@ export async function getImportContext(semesterId: number) {
   await requireCoordinator();
   const [topicRows, assessorRows, studentRows, teamRows] = await Promise.all([
     db.select({ id: topics.id, name: topics.name }).from(topics),
-    db.select({ id: assessors.id, name: assessors.name }).from(assessors),
+    db
+      .select({
+        id: assessors.id,
+        name: assessors.name,
+        teamId: assessors.teamId,
+      })
+      .from(assessors),
     db
       .select({ studentNumber: students.studentNumber })
       .from(students)
@@ -105,6 +111,27 @@ export async function commitImport(
           }
         }
         if (options.createMissingAssessors) {
+          const teamRows = await tx
+            .select({ id: teams.id, name: teams.name })
+            .from(teams);
+          const teamByName = new Map(
+            teamRows.map((t) => [t.name.toLowerCase(), t.id])
+          );
+
+          // The sheet's Team column (if mapped) tells us which team a new
+          // assessor belongs to; the first row that names them and carries a
+          // recognised team wins. Falls back to the default team below.
+          const teamForAssessor = new Map<string, number>();
+          for (const row of valid) {
+            for (const assessorName of [row.firstAssessor, row.secondAssessor]) {
+              if (!assessorName || !row.team) continue;
+              const key = assessorName.toLowerCase();
+              if (teamForAssessor.has(key)) continue;
+              const teamId = teamByName.get(row.team.toLowerCase());
+              if (teamId) teamForAssessor.set(key, teamId);
+            }
+          }
+
           const missing = [
             ...new Set(
               valid
@@ -113,9 +140,11 @@ export async function commitImport(
             ),
           ];
           for (const name of missing) {
+            const teamId =
+              teamForAssessor.get(name.toLowerCase()) ?? options.defaultTeamId;
             const [row] = await tx
               .insert(assessors)
-              .values({ name, teamId: options.defaultTeamId })
+              .values({ name, teamId })
               .returning();
             assessorByName.set(name.toLowerCase(), row.id);
             // New assessors start unavailable: the coordinator sets their
