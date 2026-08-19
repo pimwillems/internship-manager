@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { asc } from "drizzle-orm";
-import { Download } from "lucide-react";
+import { Download, Printer } from "lucide-react";
 
 import { db } from "@/lib/db";
 import { teams } from "@/db/schema";
@@ -46,6 +47,25 @@ export default async function ImportPage() {
                 <a href="/api/export">
                   <Download /> Export to .xlsx
                 </a>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {semester && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Assignment list</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-wrap items-center gap-3">
+              <p className="text-muted-foreground text-sm">
+                A printable list of approved assignments — student, topic, and
+                both assessors only — for sharing publicly.
+              </p>
+              <Button asChild variant="outline" className="ml-auto">
+                <Link href="/students/print" target="_blank">
+                  <Printer /> Open printable list
+                </Link>
               </Button>
             </CardContent>
           </Card>

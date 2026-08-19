@@ -63,7 +63,7 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 
 export function AppSidebar() {
   return (
-    <aside className="bg-muted/30 hidden w-56 shrink-0 flex-col border-r p-3 md:flex">
+    <aside className="bg-muted/30 hidden w-56 shrink-0 flex-col border-r p-3 md:flex print:hidden">
       <div className="mb-4 px-2 pt-2">
         <span className="text-sm font-semibold">Internship Coord.</span>
       </div>

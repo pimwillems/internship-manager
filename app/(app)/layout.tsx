@@ -25,7 +25,7 @@ export default async function AppLayout({
     <div className="flex min-h-dvh">
       <AppSidebar />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 shrink-0 items-center gap-3 border-b px-4">
+        <header className="flex h-14 shrink-0 items-center gap-3 border-b px-4 print:hidden">
           <MobileNav />
           <SemesterSwitcher
             semesters={semesters}
@@ -36,7 +36,7 @@ export default async function AppLayout({
             <UserMenu email={session.user.email} />
           </div>
         </header>
-        <main id="main-content" className="min-w-0 flex-1 p-4 md:p-6">
+        <main id="main-content" className="min-w-0 flex-1 p-4 md:p-6 print:p-0">
           {children}
         </main>
       </div>
