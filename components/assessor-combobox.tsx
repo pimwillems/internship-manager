@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Check, ChevronsUpDown, TriangleAlert, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -185,13 +186,13 @@ export function AssessorCombobox({
       </div>
 
       {teamMismatch && (
-        <p className="text-muted-foreground flex items-start gap-1.5 text-xs">
-          <TriangleAlert className="text-warning mt-px size-3.5 shrink-0" />
-          <span>
-            {selected!.name} is in {selected!.teamName}, which does not manage
-            this student&apos;s topic. That is allowed — just a heads-up.
-          </span>
-        </p>
+        <Alert variant="warning">
+          <TriangleAlert />
+          <AlertDescription>
+            In {selected!.teamName}, not the topic&apos;s team — allowed, just
+            a heads-up.
+          </AlertDescription>
+        </Alert>
       )}
     </div>
   );
